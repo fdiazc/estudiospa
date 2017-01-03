@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Estudio App</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.5.2/animate.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.css">
+  </head>
+  <body  id="app">
+    <!-- header -->
+    <div class="jumbotron text-center" >
+      <div class="container-fluid">
+        <h1>Elaboración de una base digital del clima comunal de Chile: línea base (1980-2010) y proyección al año 2050</h1>
+        <p><strong>Informa Final</strong> <br> <strong>Julio 2016</strong></p>
+        <p>Elaborado por: <br> Información para el Desarrollo Productivo Ltda. (INFODEP)</p>
+        <p>Estudio encargado por el Ministerio del Medio Ambiente <br> Departamento de Cambio Climático</p>
+        <p>Elaborado en el marco del Proyecto "Tercera Comunicación Nacional sobre cambio climático"</p>
+        <i class="fa fa-fw fa-angle-down fa-3x"></i>
+      </div>
+    </div>
+
+    <display :items="items"></display>
+
+    <div class="container-fluid text-center">
+      <p>
+        <i class="fa fa-fw fa-5x fa-file-pdf-o"></i>
+        <i class="fa fa-fw fa-5x fa-file-excel-o"></i>
+        <i class="fa fa-fw fa-5x fa-file-text-o"></i>
+      </p>
+    </div>
+
+    <div class="jumbotron text-center">
+      <div class="container-fluid">
+        <h3>Coordinador Técinco</h3>
+        <p>Karl-Peter Muck</p>
+        <h3>Coordinadora Administrativa</h3>
+        <p>Johanna Arriagada</p>
+        <h3>Equipo Ejecutor</h3>
+        <p>Ferando Santibañez Quezada <br> Ingeniero Agronomo <br> Dr. en bioclimatología <br> Profesor Universidad de Chile</p>
+        <p>Paula Santibañez Varnero <br> Ingeniro Civil <br> Dra. en Ciencias Silvoagropecuarias</p>
+        <p>Paulina González <br> Ingeniro en Recursos Naturales Renovables</p>
+      </div>
+    </div>
+
+    <!-- footer -->
+    <footer class="container-fluid text-center">
+      <i class="fa fa-fw fa-map-marker fa-5x"></i>
+      <p>Ministerio del Medio Ambiente</p>
+      <p>San Martín 73 - Santiago - Chile</p>
+    </footer>
+
+    <!-- templates -->
+    <template id="display-template">
+      <!-- body -->
+      <div class="container-fluid">
+
+        <!-- menu -->
+        <div class="col-sm-3">
+          <!-- regiones -->
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              Regiones
+            </div>
+            <div class="panel-body">
+              <p v-if="regionSelected" class="list-group-item animated fadeIn">{{ regionSelected.region }} <span class="pull-right"><i class="fa fa-fw fa-close" v-on:click="deselectRegion()"></i></span></p>
+              <p v-else v-for="itemRegion in items" v-on:click="selectRegion(itemRegion)" class="animated fadeInDown">{{ itemRegion.region }}</p>
+            </div>
+          </div>
+          <!-- provincias -->
+          <div class="panel panel-default animated" v-if="regionSelected" transition="bounce-left">
+            <div class="panel-heading">
+              Provincias
+            </div>
+            <div class="panel-body">
+              <p v-if="provinciaSelected" class="list-group-item animated fadeIn">{{ provinciaSelected.provincia }} <span class="pull-right"><i class="fa fa-fw fa-close" v-on:click="deselectProvincia()"></i></span></p>
+              <p v-else v-for="itemProvincia in regionSelected.provincias " v-on:click="selectProvincia(itemProvincia)" class="animated fadeInDown">{{ itemProvincia.provincia }}</p>
+            </div>
+          </div>
+          <!-- comunas -->
+          <div class="panel panel-default animated" v-if="provinciaSelected" transition="bounce-left">
+            <div class="panel-heading">
+              Comunas
+            </div>
+            <div class="panel-body">
+              <p v-if="comunaSelected" class="list-group-item animated fadeIn">{{ comunaSelected.comuna }} <span class="pull-right"><i class="fa fa-fw fa-close" v-on:click="deselectComuna()"></i></span></p>
+              <p v-else v-for="itemComuna in provinciaSelected.comunas" v-on:click="selectComuna(itemComuna)" class="animated fadeInDown">{{ itemComuna.comuna }}</p>
+            </div>
+          </div>
+          <!-- zonas -->
+          <div class="panel panel-default" v-if="false">
+            <div class="panel-heading">
+              Zonas
+            </div>
+            <div class="panel-body">
+              zona
+            </div>
+          </div>
+        </div>
+
+        <!-- content -->
+        <div class="col-md-9 animated" v-if="comunaSelected" transition="bounce-right">
+          <precipitaciones-chart :series="[[comunaSelected.datos[0].PPA,comunaSelected.datos[0].PPA_MIN,comunaSelected.datos[0].PPA_MAX],[comunaSelected.datos[1].PPA_50,comunaSelected.datos[1].PPA_50_MIN,comunaSelected.datos[1].PPA_50_MAX]]"></precipitaciones-chart>
+          <temperaturas-chart :series="[[comunaSelected.datos[0].TXE,comunaSelected.datos[0].TNE,comunaSelected.datos[0].TXJ,comunaSelected.datos[0].TNJ,comunaSelected.datos[0].Temed,comunaSelected.datos[0].Tjmed],[comunaSelected.datos[1].TXE_50,comunaSelected.datos[1].TNE_50,comunaSelected.datos[1].TXJ_50,comunaSelected.datos[1].TNJ_50,comunaSelected.datos[1].Temed_50,comunaSelected.datos[1].Tjmed_50]]"></temperaturas-chart>
+        </div>
+      </div>
+    </template>
+
+    <template id="temperaturas-chart-template">
+      <h1>Temperaturas</h1>
+      <div id="temperaturas-chart" class="ct-chart"></div>
+    </template>
+
+    <template id="precipitaciones-chart-template">
+      <h1>Precipitaciones</h1>
+      <div id="precipitaciones-chart" class="ct-chart"></div>
+    </template>
+
+
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/vue/1.0.28/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
+    <script src="https://unpkg.com/scrollreveal@3.3.2/dist/scrollreveal.min.js"></script>
+    <script>
+      window.sr = ScrollReveal();
+      sr.reveal('.container-fluid');
+    </script>
+    <script>
+      Vue.component('display', {
+        template: '#display-template',
+        props: ['items'],
+        data: function () {
+          return {
+            regionSelected: false,
+            provinciaSelected: false,
+            comunaSelected: false,
+            zonaSelected: false,
+          }
+        },
+        methods: {
+          selectRegion: function (itemRegion) {
+            this.regionSelected = itemRegion;
+            this.provinciaSelected = false;
+            this.comunaSelected = false;
+            this.zonaSelected = false;
+          },
+          selectProvincia: function (itemProvincia) {
+            this.provinciaSelected = itemProvincia;
+            this.comunaSelected = false;
+            this.zonaSelected = false;
+          },
+          selectComuna: function (itemComuna) {
+            this.comunaSelected = itemComuna;
+            this.zonaSelected = false;
+          },
+          deselectRegion: function () {
+            this.regionSelected = false;
+            this.provinciaSelected = false;
+            this.comunaSelected = false;
+            this.zonaSelected = false;
+          },
+          deselectProvincia: function () {
+            this.provinciaSelected = false;
+            this.comunaSelected = false;
+            this.zonaSelected = false;
+          },
+          deselectComuna: function () {
+            this.comunaSelected = false;
+            this.zonaSelected = false;
+          }
+        }
+      });
+
+      Vue.component('temperaturas-chart', {
+        template: '#temperaturas-chart-template',
+        props: ['series'],
+        ready: function () {
+          var data = {
+            labels: ['Temperatura Máxima Estival','Temperatura Mínima Estival','Temperatura Máxima Invernal','Temperatura Mínima Invernal','Temperatura Media Estival','Tjmed'],
+            series: this.series
+          };
+
+          new Chartist.Bar('#temperaturas-chart', data);
+        }
+      });
+
+      Vue.component('precipitaciones-chart', {
+        template: '#precipitaciones-chart-template',
+        props: ['series'],
+        ready: function () {
+          var data = {
+            labels: ['Precipitación Normal Annual','Precipitación Mínima Annual','Precipitación Máxima Annual'],
+            series: this.series
+          };
+
+          new Chartist.Bar('#precipitaciones-chart', data);
+        }
+      });
+
+      Vue.transition('bounce-left', {
+        enterClass: 'bounceInLeft',
+        leaveClass: 'bounceOutLeft'
+      });
+
+      Vue.transition('bounce-right', {
+        enterClass: 'bounceInRight',
+        leaveClass: 'bounceOutRight'
+      });
+
+      var app = new Vue({
+        el: '#app',
+        methods: {},
+        data: {
+          title: 'Estudio App',
+          items: [
+            {
+              region: 'Arica',
+              provincias: [
+                {
+                  provincia: 'Arica',
+                  comunas: [
+                    {
+                      comuna: 'Arica',
+                      datos: [
+                        {
+                          etiqueta: 'Línea Base (1980-2010)',
+                          TXE: '23.3',
+                          TNE: '10.8',
+                          TXJ: '17.5',
+                          TNJ: '5.6',
+                          Temed: '16.2',
+                          Tjmed: '11',
+                          PPA: '43',
+                          PPA_MIN: '21',
+                          PPA_MAX: '89'
+                        },
+                        {
+                          etiqueta: 'Escenario 2050',
+                          TXE_50: '25.9',
+                          TNE_50: '12.9',
+                          TXJ_50: '20.3',
+                          TNJ_50: '8.4',
+                          Temed_50: '18.4',
+                          Tjmed_50: '13.7',
+                          PPA_50: '40',
+                          PPA_50_MIN: '18',
+                          PPA_50_MAX: '84'
+                        }
+                      ]
+                    },
+                    {
+                      comuna: 'Camarones',
+                      datos: [
+                        {
+                          etiqueta: 'Línea Base (1980-2010)',
+                          TXE: '21.7',
+                          TNE: '9.9',
+                          TXJ: '16.2',
+                          TNJ: '4.7',
+                          Temed: '15',
+                          Tjmed: '9.9',
+                          PPA: '51',
+                          PPA_MIN: '17',
+                          PPA_MAX: '134'
+                        },
+                        {
+                          etiqueta: 'Escenario 2050',
+                          TXE_50: '24.4',
+                          TNE_50: '12',
+                          TXJ_50: '19',
+                          TNJ_50: '7.4',
+                          Temed_50: '17.3',
+                          Tjmed_50: '12.5',
+                          PPA_50: '49',
+                          PPA_50_MIN: '16',
+                          PPA_50_MAX: '130'
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  provincia: 'Parinacota',
+                  comunas: [
+                    {comuna: 'General Lagos'},
+                    {comuna: 'Putre'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Tarapacá',
+              provincias: [
+                {
+                  provincia: 'Iquique',
+                  comunas: [
+                    {comuna: 'Alto Hospicio'},
+                    {comuna: 'Iquique'}
+                  ]
+                },
+                {
+                  provincia: 'Tamarugal',
+                  comunas: [
+                    {comuna: 'Camiña'},
+                    {comuna: 'Colchane'},
+                    {comuna: 'Huara'},
+                    {comuna: 'Pica'},
+                    {comuna: 'Pozo Almonte'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Antofagasta',
+              provincias: [
+                {
+                  provincia: 'Antofagasta',
+                  comunas: [
+                    {comuna: 'Antofagasta'},
+                    {comuna: 'Mejillones'},
+                    {comuna: 'Sierra Gorda'},
+                    {comuna: 'Taltal'}
+                  ]
+                },
+                {
+                  provincia: 'El Loa',
+                  comunas: [
+                    {comuna: 'Calama'},
+                    {comuna: 'Ollagüe'},
+                    {comuna: 'San Pedro de Atacama'}
+                  ]
+                },
+                {
+                  provincia: 'Tocopilla',
+                  comunas: [
+                    {comuna: 'María Elena'},
+                    {comuna: 'Tocopilla'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Atacama',
+              provincias: [
+                {
+                  provincia: 'Chañaral',
+                  comunas: [
+                    {comuna: 'Chañaral'},
+                    {comuna: 'Diego de Almagro'}
+                  ]
+                },
+                {
+                  provincia: 'Copiapó',
+                  comunas: [
+                    {comuna: 'Caldera'},
+                    {comuna: 'Copiapó'},
+                    {comuna: 'Tierra Amarilla'}
+                  ]
+                },
+                {
+                  provincia: 'Huasco',
+                  comunas: [
+                    {comuna: 'Alto del Carmen'},
+                    {comuna: 'Freirina'},
+                    {comuna: 'Huasco'},
+                    {comuna: 'Vallenar'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Coquimbo',
+              provincias: [
+                {
+                  provincia: 'Choapa',
+                  comunas: [
+                    {comuna: 'Canela'},
+                    {comuna: 'Illapel'},
+                    {comuna: 'Los Vilos'},
+                    {comuna: 'Salamanca'}
+                  ]
+                },
+                {
+                  provincia: 'Elqui',
+                  comunas: [
+                    {comuna: 'Andacollo'},
+                    {comuna: 'Coquimbo'},
+                    {comuna: 'La Higuera'},
+                    {comuna: 'La Serena'},
+                    {comuna: 'Paihuano'},
+                    {comuna: 'Vicuña'}
+                  ]
+                },
+                {
+                  provincia: 'Limarí',
+                  comunas: [
+                    {comuna: 'Combarbalá'},
+                    {comuna: 'Monte Patria'},
+                    {comuna: 'Ovalle'},
+                    {comuna: 'Punitaqui'},
+                    {comuna: 'Río Hurtado'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Valparaíso',
+              provincias: [
+                {
+                  provincia: 'Los Andes',
+                  comunas: [
+                    {comuna: 'Calle Larga'},
+                    {comuna: 'Los Andes'},
+                    {comuna: 'Rinconada'},
+                    {comuna: 'San Esteban'}
+                  ]
+                },
+                {
+                  provincia: 'Marga Marga',
+                  comunas: [
+                    {comuna: 'Limache'},
+                    {comuna: 'Olmué'},
+                    {comuna: 'Quilpué'},
+                    {comuna: 'Villa Alemana'}
+                  ]
+                },
+                {
+                  provincia: 'Petorca',
+                  comunas: [
+                    {comuna: 'Cabildo'},
+                    {comuna: 'La Ligua'},
+                    {comuna: 'Papudo'},
+                    {comuna: 'Petorca'},
+                    {comuna: 'Zapallar'}
+                  ]
+                },
+                {
+                  provincia: 'Quillota',
+                  comunas: [
+                    {comuna: 'Calera'},
+                    {comuna: 'Hijuelas'},
+                    {comuna: 'La Cruz'},
+                    {comuna: 'Nogales'},
+                    {comuna: 'Quillota'}
+                  ]
+                },
+                {
+                  provincia: 'San Antonio',
+                  comunas: [
+                    {comuna: 'Algarrobo'},
+                    {comuna: 'Cartagena'},
+                    {comuna: 'El Quisco'},
+                    {comuna: 'El Tabo'},
+                    {comuna: 'San Antonio'},
+                    {comuna: 'Santo Domingo'}
+                  ]
+                },
+                {
+                  provincia: 'San Felipe',
+                  comunas: [
+                    {comuna: 'Catemu'},
+                    {comuna: 'Llaillay'},
+                    {comuna: 'Panquehue'},
+                    {comuna: 'Putaendo'},
+                    {comuna: 'San Felipe'},
+                    {comuna: 'Santa María'}
+                  ]
+                },
+                {
+                  provincia: 'Valparaíso',
+                  comunas: [
+                    {comuna: 'Casablanca'},
+                    {comuna: 'Concón'},
+                    {comuna: 'Puchuncaví'},
+                    {comuna: 'Quintero'},
+                    {comuna: 'Valparaíso'},
+                    {comuna: 'Viña del Mar'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Metropolitana',
+              provincias: [
+                {
+                  provincia: 'Chacabuco',
+                  comunas: [
+                    {comuna: 'Colina'},
+                    {comuna: 'Lampa'},
+                    {comuna: 'Tiltil'}
+                  ]
+                },
+                {
+                  provincia: 'Cordillera',
+                  comunas: [
+                    {comuna: 'Pirque'},
+                    {comuna: 'Puente Alto'},
+                    {comuna: 'San José de Maipo'}
+                  ]
+                },
+                {
+                  provincia: 'Maipo',
+                  comunas: [
+                    {comuna: 'Buin'},
+                    {comuna: 'Calera de Tango'},
+                    {comuna: 'Paine'},
+                    {comuna: 'San Bernardo'}
+                  ]
+                },
+                {
+                  provincia: 'Melipilla',
+                  comunas: [
+                    {comuna: 'Alhué'},
+                    {comuna: 'Curacaví'},
+                    {comuna: 'María Pinto'},
+                    {comuna: 'Melipilla'},
+                    {comuna: 'San Pedro'}
+                  ]
+                },
+                {
+                  provincia: 'Santiago',
+                  comunas: [
+                    {comuna: 'Cerrillos'},
+                    {comuna: 'Cerro Navia'},
+                    {comuna: 'Conchalí'},
+                    {comuna: 'El Bosque'},
+                    {comuna: 'Huechuraba'},
+                    {comuna: 'Independencia'},
+                    {comuna: 'La Cisterna'},
+                    {comuna: 'La Florida'},
+                    {comuna: 'La Granja'},
+                    {comuna: 'La Pintana'},
+                    {comuna: 'La Reina'},
+                    {comuna: 'Las Condes'},
+                    {comuna: 'Lo Barnechea'},
+                    {comuna: 'Lo Espejo'},
+                    {comuna: 'Lo Prado'},
+                    {comuna: 'Macul'},
+                    {comuna: 'Maipú'},
+                    {comuna: 'Ñuñoa'},
+                    {comuna: 'Pedro Aguirre Cerda'},
+                    {comuna: 'Peñalolén'},
+                    {comuna: 'Providencia'},
+                    {comuna: 'Pudahuel'},
+                    {comuna: 'Quilicura'},
+                    {comuna: 'Quinta Normal'},
+                    {comuna: 'Recoleta'},
+                    {comuna: 'Renca'},
+                    {comuna: 'San Joaquín'},
+                    {comuna: 'San Miguel'},
+                    {comuna: 'San Ramón'},
+                    {comuna: 'Santiago'},
+                    {comuna: 'Vitacura'}
+                  ]
+                },
+                {
+                  provincia: 'Talagante',
+                  comunas: [
+                    {comuna: 'El Monte'},
+                    {comuna: 'Isla de Maipo'},
+                    {comuna: 'Padre Hurtado'},
+                    {comuna: 'Peñaflor'},
+                    {comuna: 'Talagante'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'O\'Higgngs',
+              provincias: [
+                {
+                  provincia: 'Cachapoal',
+                  comunas: [
+                    {comuna: 'Codegua'},
+                    {comuna: 'Coinco'},
+                    {comuna: 'Coltauco'},
+                    {comuna: 'Doñihue'},
+                    {comuna: 'Graneros'},
+                    {comuna: 'Las Cabras'},
+                    {comuna: 'Machalí'},
+                    {comuna: 'Malloa'},
+                    {comuna: 'Mostazal'},
+                    {comuna: 'Olivar'},
+                    {comuna: 'Peumo'},
+                    {comuna: 'Pichidegua'},
+                    {comuna: 'Quinta del Tilcoco'},
+                    {comuna: 'Rancagua'},
+                    {comuna: 'Rengo'},
+                    {comuna: 'Requínoa'},
+                    {comuna: 'San Vicente'}
+                  ]
+                },
+                {
+                  provincia: 'Cardenal Caro',
+                  comunas: [
+                    {comuna: 'La Estrella'},
+                    {comuna: 'Litueche'},
+                    {comuna: 'Marchigüe'},
+                    {comuna: 'Navidad'},
+                    {comuna: 'Paredones'},
+                    {comuna: 'Pichilemu'}
+                  ]
+                },
+                {
+                  provincia: 'Colchaguas',
+                  comunas: [
+                    {comuna: 'Chépica'},
+                    {comuna: 'Chimbarongo'},
+                    {comuna: 'Lolol'},
+                    {comuna: 'Nancagua'},
+                    {comuna: 'Palmilla'},
+                    {comuna: 'Peralillo'},
+                    {comuna: 'Placilla'},
+                    {comuna: 'Pumanque'},
+                    {comuna: 'San Fernando'},
+                    {comuna: 'Santa Cruz'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Maule',
+              provincias: [
+                {
+                  provincia: 'Cauquenes',
+                  comunas: [
+                    {comuna: 'Cauquenes'},
+                    {comuna: 'Chanco'},
+                    {comuna: 'Pelluhue'}
+                  ]
+                },
+                {
+                  provincia: 'Curicó',
+                  comunas: [
+                    {comuna: 'Curicó'},
+                    {comuna: 'Hualañé'},
+                    {comuna: 'Licantén'},
+                    {comuna: 'Molina'},
+                    {comuna: 'Rauco'},
+                    {comuna: 'Romeral'},
+                    {comuna: 'Sagrada Familia'},
+                    {comuna: 'Teno'},
+                    {comuna: 'Vichuquén'}
+                  ]
+                },
+                {
+                  provincia: 'Linares',
+                  comunas: [
+                    {comuna: 'Colbún'},
+                    {comuna: 'Linares'},
+                    {comuna: 'Longaví'},
+                    {comuna: 'Parral'},
+                    {comuna: 'Retiro'},
+                    {comuna: 'San Javier'},
+                    {comuna: 'Villa Alegre'},
+                    {comuna: 'Yerbas Buenas'}
+                  ]
+                },
+                {
+                  provincia: 'Talca',
+                  comunas: [
+                    {comuna: 'Constitución'},
+                    {comuna: 'Curepto'},
+                    {comuna: 'Empedrado'},
+                    {comuna: 'Maule'},
+                    {comuna: 'Pelarco'},
+                    {comuna: 'Pencahue'},
+                    {comuna: 'Río Claro'},
+                    {comuna: 'San Clemente'},
+                    {comuna: 'San Rafael'},
+                    {comuna: 'Talca'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Biobío',
+              provincias: [
+                {
+                  provincia: 'Arauco',
+                  comunas: [
+                    {comuna: 'Arauco'},
+                    {comuna: 'Cañete'},
+                    {comuna: 'Contulmo'},
+                    {comuna: 'Curanilahue'},
+                    {comuna: 'Lebu'},
+                    {comuna: 'Los Álamos'},
+                    {comuna: 'Tirúa'}
+                  ]
+
+                },
+                {
+                  provincia: 'Biobío',
+                  comunas: [
+                    {comuna: 'Alto Biobío'},
+                    {comuna: 'Antuco'},
+                    {comuna: 'Cabrero'},
+                    {comuna: 'Laja'},
+                    {comuna: 'Los Ángeles'},
+                    {comuna: 'Mulchén'},
+                    {comuna: 'Nacimiento'},
+                    {comuna: 'Negrete'},
+                    {comuna: 'Quilaco'},
+                    {comuna: 'Quilleco'},
+                    {comuna: 'San Rosendo'},
+                    {comuna: 'Santa Barbara'},
+                    {comuna: 'Tucapel'},
+                    {comuna: 'Yumbel'}
+                  ]
+                },
+                {
+                  provincia: 'Concepción',
+                  comunas: [
+                    {comuna: 'Chiguayante'},
+                    {comuna: 'Concepción'},
+                    {comuna: 'Coronel'},
+                    {
+                      comuna: 'Florida',
+                      datos: [
+                        {
+                          etiqueta: 'Línea Base (1980-2010)',
+                          TXE: '26.5',
+                          TNE: '11.1',
+                          TXJ: '13.2',
+                          TNJ: '5.6',
+                          Temed: '17.9',
+                          Tjmed: '8.9',
+                          PPA: '1446',
+                          PPA_MIN: '1306',
+                          PPA_MAX: '1649'
+                        },
+                        {
+                          etiqueta: 'Escenario 2050',
+                          TXE_50: '28.7',
+                          TNE_50: '12.9',
+                          TXJ_50: '14.6',
+                          TNJ_50: '7',
+                          Temed_50: '19.8',
+                          Tjmed_50: '10.3',
+                          PPA_50: '1228',
+                          PPA_50_MIN: '1110',
+                          PPA_50_MAX: '1401'
+                        }
+                      ]
+                    },
+                    {comuna: 'Hualpén'},
+                    {comuna: 'Hualqui'},
+                    {comuna: 'Lota'},
+                    {comuna: 'Penco'},
+                    {comuna: 'San Pedro de La Paz'},
+                    {comuna: 'Santa Juana'},
+                    {comuna: 'Talcahuano'},
+                    {comuna: 'Tomé'}
+                  ]
+                },
+                {
+                  provincia: 'Ñuble',
+                  comunas: [
+                    {comuna: 'Bulnes'},
+                    {comuna: 'Chillán'},
+                    {comuna: 'Chillán Viejo'},
+                    {comuna: 'Cobquecura'},
+                    {comuna: 'Coelemu'},
+                    {comuna: 'Coihueco'},
+                    {comuna: 'El Carmen'},
+                    {comuna: 'Ninhue'},
+                    {comuna: 'Ñiquén'},
+                    {comuna: 'Pemuco'},
+                    {comuna: 'Pinto'},
+                    {comuna: 'Portezuelo'},
+                    {comuna: 'Quillón'},
+                    {comuna: 'Quirihue'},
+                    {comuna: 'Ranquil'},
+                    {comuna: 'San Carlos'},
+                    {comuna: 'San Fabían'},
+                    {comuna: 'San Ignacio'},
+                    {comuna: 'San Nicolás'},
+                    {comuna: 'Treguaco'},
+                    {comuna: 'Yungay'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Araucanía',
+              provincias: [
+                {
+                  provincia: 'Cautín',
+                  comunas: [
+                    {comuna: 'Carahue'},
+                    {comuna: 'Cholchol'},
+                    {comuna: 'Cunco'},
+                    {comuna: 'Curarrehue'},
+                    {comuna: 'Freire'},
+                    {comuna: 'Galvarino'},
+                    {comuna: 'Gorbea'},
+                    {comuna: 'Lautaro'},
+                    {comuna: 'Loncoche'},
+                    {comuna: 'Melipeuco'},
+                    {comuna: 'Nueva Imperial'},
+                    {comuna: 'Padre Las Casas'},
+                    {comuna: 'Perquenco'},
+                    {comuna: 'Pitrufquén'},
+                    {comuna: 'Pucón'},
+                    {comuna: 'Saavedra'},
+                    {comuna: 'Teodoro Schmidth'},
+                    {comuna: 'Temuco'},
+                    {comuna: 'Toltén'},
+                    {comuna: 'Vilcún'},
+                    {comuna: 'Villarica'}
+                  ]
+                },
+                {
+                  provincia: 'Malleco',
+                  comunas: [
+                    {comuna: 'Angol'},
+                    {comuna: 'Collipulli'},
+                    {comuna: 'Curacautín'},
+                    {comuna: 'Ercilla'},
+                    {comuna: 'Lonquimay'},
+                    {comuna: 'Los Sauces'},
+                    {comuna: 'Lumaco'},
+                    {comuna: 'Purén'},
+                    {comuna: 'Renaico'},
+                    {comuna: 'Traiguén'},
+                    {comuna: 'Victoria'}
+                  ]
+                },
+              ]
+            },
+            {
+              region: 'Los Ríos',
+              provincias: [
+                {
+                  provincia: 'Ranco',
+                  comunas: [
+                    {comuna: 'Futrono'},
+                    {comuna: 'La Unión'},
+                    {comuna: 'Lago Ranco'},
+                    {comuna: 'Lanco'},
+                    {comuna: 'Paillaco'},
+                    {comuna: 'Río Bueno'}
+                  ]
+                },
+                {
+                  provincia: 'Valdivia',
+                  comunas: [
+                    {comuna: 'Corral'},
+                    {comuna: 'Los Lagos'},
+                    {comuna: 'Máfil'},
+                    {comuna: 'Mariquina'},
+                    {comuna: 'Panguipulli'},
+                    {comuna: 'Valdivia'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Los Lagos',
+              provincias: [
+                {
+                  provincia: 'Chiloé',
+                  comunas: [
+                    {comuna: 'Ancud'},
+                    {comuna: 'Castro'},
+                    {comuna: 'Chonchi'},
+                    {comuna: 'Curaco de Vélez'},
+                    {comuna: 'Dalcahue'},
+                    {comuna: 'Puqueldón'},
+                    {comuna: 'Queilén'},
+                    {comuna: 'Quellón'},
+                    {comuna: 'Quemchi'},
+                    {comuna: 'Quinchao'}
+                  ]
+                },
+                {
+                  provincia: 'Llanquihue',
+                  comunas: [
+                    {comuna: 'Calbuco'},
+                    {comuna: 'Cochamó'},
+                    {comuna: 'Fresia'},
+                    {comuna: 'Frutillar'},
+                    {comuna: 'Llanquihue'},
+                    {comuna: 'Los Muermos'},
+                    {comuna: 'Maullín'},
+                    {comuna: 'Puerto Montt'},
+                    {comuna: 'Puerto Varas'}
+                  ]
+                },
+                {
+                  provincia: 'Palena',
+                  comunas: [
+                    {comuna: 'Chaitén'},
+                    {comuna: 'Futaleufú'},
+                    {comuna: 'Hualaihué'},
+                    {comuna: 'Palena'}
+                  ]
+                },
+                {
+                  provincia: 'Osorno',
+                  comunas: [
+                    {comuna: 'Osorno'},
+                    {comuna: 'Puerto Octay'},
+                    {comuna: 'Purranque'},
+                    {comuna: 'Puyehue'},
+                    {comuna: 'Río Negro'},
+                    {comuna: 'San Juan de la Costa'},
+                    {comuna: 'San Pablo'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Aysén',
+              provincias: [
+                {
+                  provincia: 'Aysén',
+                  comunas: [
+                    {comuna: 'Aysén'},
+                    {comuna: 'Cisnes'},
+                    {comuna: 'Guaitecas'}
+                  ]
+                },
+                {
+                  provincia: 'Capitán Prat',
+                  comunas: [
+                    {comuna: 'Cochrane'},
+                    {comuna: 'O\'Higgings'},
+                    {comuna: 'Tortel'}
+                  ]
+                },
+                {
+                  provincia: 'Coyhaique',
+                  comunas: [
+                    {comuna: 'Coyhaique'},
+                    {comuna: 'Lago Verde'}
+                  ]
+                },
+                {
+                  provincia: 'General Carrera',
+                  comunas: [
+                    {comuna: 'Chile Chico'},
+                    {comuna: 'Río Ibáñez'}
+                  ]
+                }
+              ]
+            },
+            {
+              region: 'Magallanes',
+              provincias: [
+                {
+                  provincia: 'Antártica Chilena',
+                  comunas: [
+                    {comuna: 'Cabo de Hornos'}
+                  ]
+                },
+                {
+                  provincia: 'Magallanes',
+                  comunas: [
+                    {comuna: 'Laguna Blanca'},
+                    {comuna: 'Punta Arenas'},
+                    {comuna: 'Río Verde'},
+                    {comuna: 'San Gregorio'}
+                  ]
+                },
+                {
+                  provincia: 'Tierra del Fuego',
+                  comunas: [
+                    {comuna: 'Porvenir'},
+                    {comuna: 'Primavera'},
+                    {comuna: 'Timaukel'}
+                  ]
+                },
+                {
+                  provincia: 'Última Esperanza',
+                  comunas: [
+                    {comuna: 'Natales'},
+                    {comuna: 'Torres del Paine'}
+                  ]
+                },
+              ]
+            }
+          ]
+        }
+      });
+    </script>
+  </body>
+</html>
